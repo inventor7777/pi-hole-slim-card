@@ -19,6 +19,7 @@ A Lovelace custom card inspired by the classic Pi-hole dashboard tiles. The more
 - Unit overrides for both the main value and footer value
 - Built-in visual editor
 - Optional long-press action that opens your Pi-hole URL
+- Optional status switch entity that dims the card when it is `off` or `unavailable`
 
 ## Installation
 You can install via HACS:
@@ -46,6 +47,7 @@ Card-wide options:
 - Title
 - Tile height
 - Pi-hole URL for long press
+- Status switch entity
 
 ## Example
 
@@ -53,6 +55,7 @@ Card-wide options:
 type: custom:pi-hole-slim-card
 title: Pi-hole
 pi_hole_url: http://pi.hole/admin
+status_switch: switch.pi_hole_status
 size: large
 sections:
   - key: total_queries

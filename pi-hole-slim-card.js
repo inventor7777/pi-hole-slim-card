@@ -1,4 +1,4 @@
-const CARD_VERSION = "2026.04.04-1";
+const CARD_VERSION = "2026.04.04-2";
 const HOLD_DELAY_MS = 500;
 
 const SECTION_DEFINITIONS = [
@@ -60,6 +60,7 @@ function getDefaultConfig() {
     type: "custom:pi-hole-slim-card",
     title: "",
     pi_hole_url: "",
+    status_switch: "",
     size: "large",
     sections: SECTION_DEFINITIONS.map((section) => ({
       key: section.key,
@@ -82,6 +83,7 @@ function normalizeConfig(config) {
     type: "custom:pi-hole-slim-card",
     title: config?.title ?? "",
     pi_hole_url: config?.pi_hole_url ?? "",
+    status_switch: config?.status_switch ?? "",
     size: config?.size === "compact" ? "compact" : "large",
     sections: SECTION_DEFINITIONS.map((definition) => {
       const provided = providedSections.find((section) => section?.key === definition.key) || {};
@@ -236,6 +238,14 @@ class PiHoleSlimCard extends HTMLElement {
     window.open(url, "_blank", "noopener");
   }
 
+  _isDimmedByStatus() {
+    const statusEntityId = String(this._config?.status_switch || "").trim();
+    if (!statusEntityId) return false;
+
+    const statusState = this._getStateObject(statusEntityId)?.state;
+    return statusState === "off" || statusState === "unavailable";
+  }
+
   _clearHold() {
     if (this._holdTimer) {
       clearTimeout(this._holdTimer);
@@ -335,10 +345,11 @@ class PiHoleSlimCard extends HTMLElement {
 
     const title = this._config.title?.trim();
     const sizeClass = this._config.size === "compact" ? "card--compact" : "card--large";
+    const isDimmed = this._isDimmedByStatus();
 
     this.shadowRoot.innerHTML = `
       <ha-card>
-        <div class="card ${sizeClass}">
+        <div class="card ${sizeClass}${isDimmed ? " card--status-dimmed" : ""}">
           ${title ? `<div class="card__title">${this._escapeHtml(title)}</div>` : ""}
           <div class="grid">
             ${SECTION_DEFINITIONS.map((definition) => this._renderSection(definition)).join("")}
@@ -362,6 +373,11 @@ class PiHoleSlimCard extends HTMLElement {
           display: grid;
           gap: 14px;
           padding: 16px;
+          transition: opacity 180ms ease;
+        }
+
+        .card--status-dimmed {
+          opacity: 0.34;
         }
 
         .card__title {
@@ -617,6 +633,14 @@ class PiHoleSlimCardEditor extends HTMLElement {
     this._emitConfig();
   }
 
+  _updateStatusSwitch(value) {
+    this._config = {
+      ...this._config,
+      status_switch: value,
+    };
+    this._emitConfig();
+  }
+
   _updateSection(key, field, value) {
     this._config = {
       ...this._config,
@@ -646,6 +670,7 @@ class PiHoleSlimCardEditor extends HTMLElement {
       <div class="editor">
         <ha-textfield id="title" label="Card title (optional)"></ha-textfield>
         <ha-textfield id="pi_hole_url" label="Pi-hole URL (for long press)"></ha-textfield>
+        <ha-selector id="status_switch"></ha-selector>
         <ha-selector id="size"></ha-selector>
         <div class="editor-section">
           <div class="editor-section__title">Widgets</div>
@@ -754,6 +779,7 @@ class PiHoleSlimCardEditor extends HTMLElement {
 
     this._titleField = this.shadowRoot.querySelector("#title");
     this._piHoleUrlField = this.shadowRoot.querySelector("#pi_hole_url");
+    this._statusSwitchField = this.shadowRoot.querySelector("#status_switch");
     this._sizeField = this.shadowRoot.querySelector("#size");
     this._fields = Array.from(this.shadowRoot.querySelectorAll("[data-field]"));
 
@@ -766,6 +792,16 @@ class PiHoleSlimCardEditor extends HTMLElement {
     if (this._piHoleUrlField) {
       this._piHoleUrlField.addEventListener("input", (event) => {
         this._updatePiHoleUrl(this._getEventValue(event));
+      });
+    }
+
+    if (this._statusSwitchField) {
+      this._statusSwitchField.selector = { entity: { domain: ["switch", "binary_sensor", "input_boolean"] } };
+      this._statusSwitchField.label = "Status switch entity";
+      this._statusSwitchField.required = false;
+      this._statusSwitchField.clearable = true;
+      this._statusSwitchField.addEventListener("value-changed", (event) => {
+        this._updateStatusSwitch(this._getEventValue(event));
       });
     }
 
@@ -829,6 +865,10 @@ class PiHoleSlimCardEditor extends HTMLElement {
       this._piHoleUrlField.hass = this._hass;
     }
 
+    if (this._statusSwitchField) {
+      this._statusSwitchField.hass = this._hass;
+    }
+
     if (this._sizeField) {
       this._sizeField.hass = this._hass;
     }
@@ -847,6 +887,10 @@ class PiHoleSlimCardEditor extends HTMLElement {
 
     if (this._piHoleUrlField && this._piHoleUrlField.value !== this._config.pi_hole_url) {
       this._piHoleUrlField.value = this._config.pi_hole_url || "";
+    }
+
+    if (this._statusSwitchField && this._statusSwitchField.value !== this._config.status_switch) {
+      this._statusSwitchField.value = this._config.status_switch || "";
     }
 
     if (this._sizeField && this._sizeField.value !== this._config.size) {
