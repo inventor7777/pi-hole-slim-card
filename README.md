@@ -1,6 +1,6 @@
 # Pi-hole Slim Card
 
-A Lovelace custom card inspired by the classic Pi-hole dashboard tiles.
+A Lovelace custom card inspired by the classic Pi-hole dashboard tiles. The more popular full featured Pi-hole card was way too big for what I wanted, so I carefully created this with GPT 5.4 Codex.
 
 ## Features
 
@@ -63,3 +63,5 @@ sections:
     entity: sensor.pihole_domains_blocked
     unit: domains
 ```
+
+*Full disclaimer: This was fully vibe coded by GPT 5.4 Codex. However, I personally use this card and I am happy with it, so I decided to post in case it could help anyone else.*
