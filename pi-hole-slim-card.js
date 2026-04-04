@@ -62,6 +62,7 @@ function getDefaultConfig() {
     pi_hole_url: "",
     status_switch: "",
     size: "large",
+    sub_entity_size: "small",
     sections: SECTION_DEFINITIONS.map((section) => ({
       key: section.key,
       entity: "",
@@ -85,6 +86,7 @@ function normalizeConfig(config) {
     pi_hole_url: config?.pi_hole_url ?? "",
     status_switch: config?.status_switch ?? "",
     size: config?.size === "compact" ? "compact" : "large",
+    sub_entity_size: ["medium", "large"].includes(config?.sub_entity_size) ? config.sub_entity_size : "small",
     sections: SECTION_DEFINITIONS.map((definition) => {
       const provided = providedSections.find((section) => section?.key === definition.key) || {};
       return {
@@ -346,10 +348,11 @@ class PiHoleSlimCard extends HTMLElement {
     const title = this._config.title?.trim();
     const sizeClass = this._config.size === "compact" ? "card--compact" : "card--large";
     const isDimmed = this._isDimmedByStatus();
+    const subEntitySize = this._config.sub_entity_size || "small";
 
     this.shadowRoot.innerHTML = `
       <ha-card>
-        <div class="card ${sizeClass}${isDimmed ? " card--status-dimmed" : ""}">
+        <div class="card ${sizeClass}${isDimmed ? " card--status-dimmed" : ""} card--sub-entity-${this._escapeHtml(subEntitySize)}">
           ${title ? `<div class="card__title">${this._escapeHtml(title)}</div>` : ""}
           <div class="grid">
             ${SECTION_DEFINITIONS.map((definition) => this._renderSection(definition)).join("")}
@@ -499,6 +502,7 @@ class PiHoleSlimCard extends HTMLElement {
           white-space: nowrap;
           font-size: 0.95rem;
           font-weight: 700;
+          line-height: 1.1;
           opacity: 0.72;
         }
 
@@ -537,6 +541,22 @@ class PiHoleSlimCard extends HTMLElement {
 
         .card--compact .tile__footer-text {
           font-size: 0.82rem;
+        }
+
+        .card--sub-entity-medium .tile__footer-text {
+          font-size: 1.425rem;
+        }
+
+        .card--sub-entity-large .tile__footer-text {
+          font-size: 1.9rem;
+        }
+
+        .card--compact.card--sub-entity-medium .tile__footer-text {
+          font-size: 1.23rem;
+        }
+
+        .card--compact.card--sub-entity-large .tile__footer-text {
+          font-size: 1.64rem;
         }
 
         @media (max-width: 480px) {
@@ -663,6 +683,14 @@ class PiHoleSlimCardEditor extends HTMLElement {
     this._emitConfig();
   }
 
+  _updateSubEntitySize(value) {
+    this._config = {
+      ...this._config,
+      sub_entity_size: ["medium", "large"].includes(value) ? value : "small",
+    };
+    this._emitConfig();
+  }
+
   _renderIfNeeded() {
     if (!this.shadowRoot || this._initialized) return;
 
@@ -672,6 +700,7 @@ class PiHoleSlimCardEditor extends HTMLElement {
         <ha-textfield id="pi_hole_url" label="Pi-hole URL (for long press)"></ha-textfield>
         <ha-selector id="status_switch"></ha-selector>
         <ha-selector id="size"></ha-selector>
+        <ha-selector id="sub_entity_size"></ha-selector>
         <div class="editor-section">
           <div class="editor-section__title">Widgets</div>
           ${SECTION_DEFINITIONS.map((definition) => `
@@ -781,6 +810,7 @@ class PiHoleSlimCardEditor extends HTMLElement {
     this._piHoleUrlField = this.shadowRoot.querySelector("#pi_hole_url");
     this._statusSwitchField = this.shadowRoot.querySelector("#status_switch");
     this._sizeField = this.shadowRoot.querySelector("#size");
+    this._subEntitySizeField = this.shadowRoot.querySelector("#sub_entity_size");
     this._fields = Array.from(this.shadowRoot.querySelectorAll("[data-field]"));
 
     if (this._titleField) {
@@ -818,6 +848,23 @@ class PiHoleSlimCardEditor extends HTMLElement {
       this._sizeField.label = "Tile height";
       this._sizeField.addEventListener("value-changed", (event) => {
         this._updateSize(this._getEventValue(event));
+      });
+    }
+
+    if (this._subEntitySizeField) {
+      this._subEntitySizeField.selector = {
+        select: {
+          mode: "dropdown",
+          options: [
+            { value: "small", label: "Small" },
+            { value: "medium", label: "Medium" },
+            { value: "large", label: "Large" },
+          ],
+        },
+      };
+      this._subEntitySizeField.label = "Sub entity size";
+      this._subEntitySizeField.addEventListener("value-changed", (event) => {
+        this._updateSubEntitySize(this._getEventValue(event));
       });
     }
 
@@ -873,6 +920,10 @@ class PiHoleSlimCardEditor extends HTMLElement {
       this._sizeField.hass = this._hass;
     }
 
+    if (this._subEntitySizeField) {
+      this._subEntitySizeField.hass = this._hass;
+    }
+
     this._fields?.forEach((field) => {
       field.hass = this._hass;
     });
@@ -895,6 +946,10 @@ class PiHoleSlimCardEditor extends HTMLElement {
 
     if (this._sizeField && this._sizeField.value !== this._config.size) {
       this._sizeField.value = this._config.size || "large";
+    }
+
+    if (this._subEntitySizeField && this._subEntitySizeField.value !== this._config.sub_entity_size) {
+      this._subEntitySizeField.value = this._config.sub_entity_size || "small";
     }
 
     this._fields?.forEach((field) => {

@@ -46,6 +46,7 @@ Card-wide options:
 
 - Title
 - Tile height
+- Sub entity size
 - Pi-hole URL for long press
 - Status switch entity
 
@@ -57,6 +58,7 @@ title: Pi-hole
 pi_hole_url: http://pi.hole/admin
 status_switch: switch.pi_hole_status
 size: large
+sub_entity_size: medium
 sections:
   - key: total_queries
     entity: sensor.pihole_dns_queries_today
