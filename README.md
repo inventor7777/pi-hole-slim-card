@@ -2,7 +2,7 @@
 
 A Lovelace custom card inspired by the classic Pi-hole dashboard tiles. The more popular full featured Pi-hole card was way too big for what I wanted, so I carefully created this with GPT 5.4 Codex.
 
-![banner](https://github.com/inventor7777/pi-hole-slim-card/raw/refs/heads/main/banner)
+![banner](banner.png)
 
 ## Features
 
