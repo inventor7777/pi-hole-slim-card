@@ -19,7 +19,8 @@ A Lovelace custom card inspired by the classic Pi-hole dashboard tiles. The more
 - Optional long-press action that opens your Pi-hole URL
 
 ## Installation
-You can install via HACS
+You can install via HACS:
+
 [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=inventor7777&repository=pi-hole-slim-card&category=plugin)
 
 Or manually add the card as a Lovelace resource:
