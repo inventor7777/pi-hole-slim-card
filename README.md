@@ -1,0 +1,65 @@
+# Pi-hole Slim Card
+
+A Lovelace custom card inspired by the classic Pi-hole dashboard tiles.
+
+## Features
+
+- Four fixed Pi-hole style widgets:
+  - Total Queries
+  - Queries Blocked
+  - Percentage Blocked
+  - Domains on Lists
+- Responsive layout with automatic reflow and single-column stacking on narrow screens
+- Native Home Assistant more-info support
+  - Main tile tap opens the main entity
+  - Footer tap opens the sub entity when configured, otherwise the main entity
+- Optional footer sub-entity state display
+- Unit overrides for both the main value and footer value
+- Built-in visual editor
+- Optional long-press action that opens your Pi-hole URL
+
+## Installation
+
+Add the card as a Lovelace resource:
+
+- URL: `/local/custom/pi-hole-slim/pi-hole-slim-card.js`
+- Type: `module`
+
+## Editor Options
+
+Each widget can be configured with:
+
+- Source entity
+- Unit override
+- Sub entity
+- Sub unit override
+- Label override
+- Icon override
+
+Card-wide options:
+
+- Title
+- Tile height
+- Pi-hole URL for long press
+
+## Example
+
+```yaml
+type: custom:pi-hole-slim-card
+title: Pi-hole
+pi_hole_url: http://pi.hole/admin
+size: large
+sections:
+  - key: total_queries
+    entity: sensor.pihole_dns_queries_today
+    unit: queries
+    sub_entity: sensor.pihole_dns_queries_last_24h
+  - key: blocked_queries
+    entity: sensor.pihole_ads_blocked_today
+    unit: ads
+  - key: percentage_blocked
+    entity: sensor.pihole_ads_percentage_blocked_today
+  - key: total_domains
+    entity: sensor.pihole_domains_blocked
+    unit: domains
+```
