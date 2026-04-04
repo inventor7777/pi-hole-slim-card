@@ -25,7 +25,7 @@ You can install via HACS:
 
 Or manually add the card as a Lovelace resource:
 
-- URL: `/local/custom/pi-hole-slim/pi-hole-slim-card.js`
+- URL: `/path/to/pi-hole-slim-card.js`
 - Type: `module`
 
 ## Editor Options
