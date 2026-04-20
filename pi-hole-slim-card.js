@@ -1,4 +1,4 @@
-const CARD_VERSION = "2026.04.04-2";
+const CARD_VERSION = "2026.04.20-1";
 const HOLD_DELAY_MS = 500;
 
 const SECTION_DEFINITIONS = [
@@ -7,24 +7,28 @@ const SECTION_DEFINITIONS = [
     label: "Total Queries",
     defaultIcon: "mdi:web",
     accent: "blue",
+    defaultUrl: "/queries",
   },
   {
     key: "blocked_queries",
     label: "Queries Blocked",
     defaultIcon: "mdi:hand-back-right",
     accent: "red",
+    defaultUrl: "/queries?upstream=blocklist",
   },
   {
     key: "percentage_blocked",
     label: "Percentage Blocked",
     defaultIcon: "mdi:chart-pie",
     accent: "orange",
+    defaultUrl: "/queries?upstream=blocklist",
   },
   {
     key: "total_domains",
     label: "Domains on Lists",
     defaultIcon: "mdi:playlist-check",
     accent: "green",
+    defaultUrl: "/groups-domains",
   },
 ];
 
@@ -71,6 +75,7 @@ function getDefaultConfig() {
       sub_unit: "",
       name: section.label,
       icon: section.defaultIcon,
+      url: section.defaultUrl,
     })),
   };
 }
@@ -97,6 +102,7 @@ function normalizeConfig(config) {
         sub_unit: provided.sub_unit || "",
         name: provided.name || definition.label,
         icon: provided.icon || definition.defaultIcon,
+        url: provided.url ?? definition.defaultUrl,
       };
     }),
   };
@@ -240,6 +246,22 @@ class PiHoleSlimCard extends HTMLElement {
     window.open(url, "_blank", "noopener");
   }
 
+  _resolveSectionUrl(sectionConfig) {
+    const baseUrl = String(this._config?.pi_hole_url || "").trim();
+    const configuredUrl = String(sectionConfig?.url || "").trim();
+
+    if (!configuredUrl) return "";
+    if (!baseUrl) return configuredUrl;
+
+    try {
+      return new URL(configuredUrl, `${baseUrl.replace(/\/+$/, "")}/`).toString();
+    } catch (_error) {
+      const normalizedBase = baseUrl.replace(/\/+$/, "");
+      const normalizedPath = configuredUrl.replace(/^\/+/, "");
+      return normalizedPath ? `${normalizedBase}/${normalizedPath}` : normalizedBase;
+    }
+  }
+
   _isDimmedByStatus() {
     const statusEntityId = String(this._config?.status_switch || "").trim();
     if (!statusEntityId) return false;
@@ -257,7 +279,7 @@ class PiHoleSlimCard extends HTMLElement {
   }
 
   _startHold(element) {
-    const url = this._config?.pi_hole_url?.trim();
+    const url = element?.dataset?.holdUrl?.trim();
     if (!url || !element) return;
 
     this._clearHold();
@@ -280,6 +302,7 @@ class PiHoleSlimCard extends HTMLElement {
     const icon = sectionConfig.icon || definition.defaultIcon;
     const disabled = !sectionConfig.entity;
     const footerEntity = sectionConfig.sub_entity || sectionConfig.entity;
+    const sectionUrl = this._resolveSectionUrl(sectionConfig);
 
     return `
       <div
@@ -295,7 +318,7 @@ class PiHoleSlimCard extends HTMLElement {
           class="tile__main"
           type="button"
           data-entity="${this._escapeHtml(sectionConfig.entity)}"
-          data-hold-url="${this._escapeHtml(this._config?.pi_hole_url || "")}"
+          data-hold-url="${this._escapeHtml(sectionUrl || this._config?.pi_hole_url || "")}"
           ${disabled ? "disabled" : ""}
         >
           <div class="tile__body">
@@ -309,7 +332,7 @@ class PiHoleSlimCard extends HTMLElement {
           type="button"
           data-entity="${this._escapeHtml(footerEntity)}"
           data-click-area="footer"
-          data-hold-url="${this._escapeHtml(this._config?.pi_hole_url || "")}"
+          data-hold-url="${this._escapeHtml(sectionUrl || this._config?.pi_hole_url || "")}"
           ${disabled ? "disabled" : ""}
         >
           <span class="tile__footer-text">${this._escapeHtml(footerText)}</span>
@@ -697,10 +720,16 @@ class PiHoleSlimCardEditor extends HTMLElement {
     this.shadowRoot.innerHTML = `
       <div class="editor">
         <ha-textfield id="title" label="Card title (optional)"></ha-textfield>
-        <ha-textfield id="pi_hole_url" label="Pi-hole URL (for long press)"></ha-textfield>
-        <ha-selector id="status_switch"></ha-selector>
-        <ha-selector id="size"></ha-selector>
-        <ha-selector id="sub_entity_size"></ha-selector>
+        <div class="editor-section">
+          <div class="editor-section__title">Pi-hole settings</div>
+          <ha-textfield id="pi_hole_url" label="Pi-hole base URL"></ha-textfield>
+          <ha-selector id="status_switch"></ha-selector>
+        </div>
+        <div class="editor-section">
+          <div class="editor-section__title">Card settings</div>
+          <ha-selector id="size"></ha-selector>
+          <ha-selector id="sub_entity_size"></ha-selector>
+        </div>
         <div class="editor-section">
           <div class="editor-section__title">Widgets</div>
           ${SECTION_DEFINITIONS.map((definition) => `
@@ -742,6 +771,11 @@ class PiHoleSlimCardEditor extends HTMLElement {
                   data-field="icon"
                   data-selector-type="icon"
                 ></ha-selector>
+                <ha-textfield
+                  data-key="${definition.key}"
+                  data-field="url"
+                  label="Tile URL (relative to Pi-hole URL)"
+                ></ha-textfield>
               </div>
             </ha-expansion-panel>
           `).join("")}

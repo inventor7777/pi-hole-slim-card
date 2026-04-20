@@ -15,6 +15,10 @@ A Lovelace custom card inspired by the classic Pi-hole dashboard tiles. The more
 - Native Home Assistant more-info support
   - Main tile tap opens the main entity
   - Footer tap opens the sub entity when configured, otherwise the main entity
+- Per-tile long-press navigation with Pi-hole-aware defaults
+  - Each tile can open its own URL on hold
+  - Relative tile URLs are resolved from the configured Pi-hole URL
+  - When a tile URL is blank, holding falls back to the main Pi-hole URL
 - Optional footer sub-entity state display
 - Unit overrides for both the main value and footer value
 - Built-in visual editor
@@ -41,13 +45,14 @@ Each widget can be configured with:
 - Sub unit override
 - Label override
 - Icon override
+- Tile URL override
 
 Card-wide options:
 
 - Title
 - Tile height
 - Sub entity size
-- Pi-hole URL for long press
+- Pi-hole URL used as the base for tile URLs and long press
 - Status switch entity
 
 ## Example
@@ -64,14 +69,20 @@ sections:
     entity: sensor.pihole_dns_queries_today
     unit: queries
     sub_entity: sensor.pihole_dns_queries_last_24h
+    url: /queries
   - key: blocked_queries
     entity: sensor.pihole_ads_blocked_today
     unit: ads
+    url: /queries?upstream=blocklist
   - key: percentage_blocked
     entity: sensor.pihole_ads_percentage_blocked_today
+    url: /queries?upstream=blocklist
   - key: total_domains
     entity: sensor.pihole_domains_blocked
     unit: domains
+    url: /groups-domains
 ```
+
+With `pi_hole_url: http://192.168.50.2:1080/admin`, a tile URL like `/queries?upstream=blocklist` automatically opens `http://192.168.50.2:1080/admin/queries?upstream=blocklist`.
 
 *Full disclaimer: This was fully vibe coded by GPT 5.4 Codex. However, I personally use this card and I am happy with it, so I decided to post in case it could help anyone else.*
