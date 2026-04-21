@@ -254,7 +254,9 @@ class PiHoleSlimCard extends HTMLElement {
     if (!baseUrl) return configuredUrl;
 
     try {
-      return new URL(configuredUrl, `${baseUrl.replace(/\/+$/, "")}/`).toString();
+      const normalizedBase = `${baseUrl.replace(/\/+$/, "")}/`;
+      const normalizedRelativePath = configuredUrl.replace(/^\/+/, "");
+      return new URL(normalizedRelativePath, normalizedBase).toString();
     } catch (_error) {
       const normalizedBase = baseUrl.replace(/\/+$/, "");
       const normalizedPath = configuredUrl.replace(/^\/+/, "");
@@ -861,7 +863,7 @@ class PiHoleSlimCardEditor extends HTMLElement {
 
     if (this._statusSwitchField) {
       this._statusSwitchField.selector = { entity: { domain: ["switch", "binary_sensor", "input_boolean"] } };
-      this._statusSwitchField.label = "Status switch entity";
+      this._statusSwitchField.label = "";
       this._statusSwitchField.required = false;
       this._statusSwitchField.clearable = true;
       this._statusSwitchField.addEventListener("value-changed", (event) => {
