@@ -449,6 +449,9 @@ class PiHoleSlimCard extends HTMLElement {
           cursor: pointer;
           background: transparent;
           font: inherit;
+          user-select: none;
+          -webkit-user-select: none;
+          -webkit-touch-callout: none;
         }
 
         .tile__main:focus-visible,
@@ -475,6 +478,7 @@ class PiHoleSlimCard extends HTMLElement {
           gap: 16px;
           padding: 20px 20px 12px;
           min-height: 0;
+          pointer-events: none;
         }
 
         .tile__label {
@@ -529,11 +533,13 @@ class PiHoleSlimCard extends HTMLElement {
           font-weight: 700;
           line-height: 1.1;
           opacity: 0.72;
+          pointer-events: none;
         }
 
         .tile__arrow {
           flex: 0 0 auto;
           opacity: 0.58;
+          pointer-events: none;
         }
 
         .card--compact .tile {
